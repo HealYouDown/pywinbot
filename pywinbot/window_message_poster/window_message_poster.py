@@ -12,7 +12,7 @@ from .messages import (WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
 KEY_PRESS_DELAY = 0.05
 
 
-class WindowMessagePoster:  
+class WindowMessagePoster:
     def __init__(self, hwnd: int):
         """Class to send virtual key events to a window in the background.
 
@@ -50,7 +50,7 @@ class WindowMessagePoster:
 
         Returns:
             List[str]: List with key strings.
-        """        
+        """
         return list(KEYS.keys())
 
     @staticmethod
