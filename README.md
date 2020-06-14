@@ -56,7 +56,7 @@ wmp.send_string("Foobarspamegg")
 wmp.send_key_press("f1")
 wmp.send_key_press("esc")
 ```
-You can print get a list with all available keys the following way.
+You can get a list with all available keys the following way.
 ```py
 >>> WindowMessagePoster.key_names()
 ```
