@@ -12,22 +12,45 @@ from .messages import (WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
 KEY_PRESS_DELAY = 0.05
 
 
-class WindowMessagePoster:
+class WindowMessagePoster:  
     def __init__(self, hwnd: int):
+        """Class to send virtual key events to a window in the background.
+
+        Args:
+            hwnd (int): Window Handle
+        """
+
         self._hwnd = hwnd
 
     @property
     def hwnd(self) -> int:
+        """Returns the registered window handle.
+
+        Returns:
+            int: Window Handle
+        """
+
         return self._hwnd
 
     @property
     def window_rect(self) -> RECT:
+        """Returns a rect with from the registered window.
+
+        Returns:
+            RECT: [rect.left, rect.top, rect.right, rect.bottom]
+        """
+
         rect = RECT()
         GetWindowRect(self.hwnd, byref(rect))
         return rect
 
     @staticmethod
     def key_names() -> List[str]:
+        """Returns a list with all available keys to send to the window.
+
+        Returns:
+            List[str]: List with key strings.
+        """        
         return list(KEYS.keys())
 
     @staticmethod
@@ -35,6 +58,12 @@ class WindowMessagePoster:
         window_class: Union[str, None] = None,
         window_title: Union[str, None] = None,
     ) -> "WindowMessagePoster":
+        """Initalizes the class by either the window class or title.
+
+        Returns:
+            WindowMessagePoster: Class Object
+        """
+
         _, hwnd = get_process_id(window_class,
                                  window_title)
 
