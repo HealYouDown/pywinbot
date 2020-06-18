@@ -7,7 +7,8 @@ from ..memory_reader.helpers import get_process_id
 from .functions import PostMessage, GetWindowRect, ScreenToClient
 from .keys import VIRTUAL_KEY_CODES as KEYS
 from .messages import (WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
-                       WM_LBUTTONUP, WM_RBUTTONDOWN, WM_RBUTTONUP)
+                       WM_LBUTTONUP, WM_RBUTTONDOWN, WM_RBUTTONUP,
+                       WM_MOUSEWHEEL)
 
 KEY_PRESS_DELAY = 0.05
 
@@ -69,6 +70,17 @@ class WindowMessagePoster:
 
         return WindowMessagePoster(hwnd)
 
+    def _get_pos_from_tuple(self, position: tuple):
+        rect = self.window_rect
+
+        # Adjust point to window client area
+        point = POINT(rect.left + position[0],
+                      rect.top + position[1])
+        ScreenToClient(self.hwnd, byref(point))
+
+        pos = point.x | (point.y * 2**16)
+        return pos
+
     def _keydown(self, key: str) -> None:
         PostMessage(self.hwnd, WM_KEYDOWN, KEYS[key], 0)
 
@@ -83,14 +95,7 @@ class WindowMessagePoster:
             down_message = WM_RBUTTONDOWN
             up_message = WM_RBUTTONUP
 
-        rect = self.window_rect
-
-        # Adjust point to window client area
-        point = POINT(rect.left + position[0],
-                      rect.top + position[1])
-        ScreenToClient(self.hwnd, byref(point))
-
-        pos = point.x | (point.y * 2**16)
+        pos = self._get_pos_from_tuple(position)
 
         # Post message
         PostMessage(self.hwnd, down_message, 0, pos)
@@ -119,3 +124,25 @@ class WindowMessagePoster:
 
     def send_right_click(self, position: tuple) -> None:
         self._click("right", position)
+
+    def send_mouse_scroll(
+        self,
+        position: tuple,
+        direction: int,
+        multiplier: int = 1
+    ):
+        """Sends a mouse scroll event to given position and given direction.
+
+        Args:
+            position (tuple): Position where the scroll should happen.
+            direction (int): 1 for up, -1 for down.
+            multiplier (int): 1 = full scroll rotation, 0.5 = half.
+        """
+
+        pos = self._get_pos_from_tuple(position)
+
+        delta = (120 * direction) * multiplier
+        lParam = delta << 16
+
+        # Post message
+        PostMessage(self.hwnd, WM_MOUSEWHEEL, lParam, pos)
