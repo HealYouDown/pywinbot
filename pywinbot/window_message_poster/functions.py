@@ -41,3 +41,9 @@ def GetWindowRect(
 
     res = func(hWnd, lpRect)
     return bool(res)
+
+
+def GetForegroundWindow() -> HWND:
+    func = windll.user32.GetForegroundWindow
+
+    return func()
