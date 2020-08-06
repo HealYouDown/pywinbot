@@ -45,3 +45,6 @@ class Address:
 
         elif isinstance(other, Address):
             return Address(self.address_decimal + other.address_decimal)
+
+    def __mul__(self, other: int):
+        return Address(self.address_decimal * other)
