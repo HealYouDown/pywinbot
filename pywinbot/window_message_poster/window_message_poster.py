@@ -1,16 +1,15 @@
 import time
-from typing import List, Union
-from ctypes.wintypes import POINT, RECT
 from ctypes import byref
+from ctypes.wintypes import POINT, RECT
+from typing import List, Union
 
 from ..memory_reader.helpers import get_process_id
-from .functions import PostMessage, GetWindowRect, ScreenToClient
+from .functions import (GetForegroundWindow, GetWindowRect, PostMessage,
+                        ScreenToClient)
 from .keys import VIRTUAL_KEY_CODES as KEYS
 from .messages import (WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
-                       WM_LBUTTONUP, WM_RBUTTONDOWN, WM_RBUTTONUP,
-                       WM_MOUSEWHEEL)
-
-KEY_PRESS_DELAY = 0.05
+                       WM_LBUTTONUP, WM_MOUSEWHEEL, WM_RBUTTONDOWN,
+                       WM_RBUTTONUP)
 
 
 class WindowMessagePoster:
@@ -22,6 +21,8 @@ class WindowMessagePoster:
         """
 
         self._hwnd = hwnd
+        self._ignore_focus = False
+        self._key_press_delay = 0.05
 
     @property
     def hwnd(self) -> int:
@@ -32,6 +33,31 @@ class WindowMessagePoster:
         """
 
         return self._hwnd
+
+    @property
+    def has_focus(self) -> bool:
+        """Returns True or False depending on if the window assoicated with
+        this class has user input focus.
+
+        Returns:
+            bool: Whether the window has focus
+        """
+
+        return GetForegroundWindow() == self.hwnd
+
+    @property
+    def can_excute_action(self) -> bool:
+        """Returns True if allowed to send an event to the window. This
+        depends on the cls._ignore_focus flag as well as whether the
+        window is currently in foreground.
+
+        Returns:
+            bool: True if allowed to send events, False if not.
+        """        
+        if self._ignore_focus:
+            return True
+
+        return True if not self.has_focus else False
 
     @property
     def window_rect(self) -> RECT:
@@ -70,6 +96,9 @@ class WindowMessagePoster:
 
         return WindowMessagePoster(hwnd)
 
+    def set_ignore_focus(self, ignore_focus: bool) -> None:
+        self._ignore_focus = ignore_focus
+
     def _get_pos_from_tuple(self, position: tuple):
         rect = self.window_rect
 
@@ -99,14 +128,14 @@ class WindowMessagePoster:
 
         # Post message
         PostMessage(self.hwnd, down_message, 0, pos)
-        time.sleep(KEY_PRESS_DELAY)
+        time.sleep(self._key_press_delay)
         PostMessage(self.hwnd, up_message, 0, pos)
 
     def send_key_press(self, key: str) -> None:
         assert key in WindowMessagePoster.key_names()
 
         self._keydown(key)
-        time.sleep(KEY_PRESS_DELAY)
+        time.sleep(self._key_press_delay)
         self._keyup(key)
 
     def send_enter(self) -> None:
